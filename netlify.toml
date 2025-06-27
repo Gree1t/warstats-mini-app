@@ -2,7 +2,7 @@
 # Updated: 2024-06-28 - Static site only
 
 [build]
-  publish = "."
+  publish = "mini_app"
   command = ""
   ignore = "*.py,requirements.txt,backend.py,mini_app_bot.py,config.py"
 
