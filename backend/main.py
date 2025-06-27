@@ -1,152 +1,74 @@
+"""
+GameStats API
+Универсальная платформа игровой статистики
+"""
+
+import os
+import time
+import logging
+import asyncio
+from typing import Dict, Any, Optional
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 import httpx
-import asyncio
 from bs4 import BeautifulSoup
-import re
-import json
-from typing import Optional, List, Dict, Any
-import logging
-from datetime import datetime, timedelta
-import time
-from playwright.async_api import async_playwright
-import os
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Создаем FastAPI приложение
 app = FastAPI(
-    title="War Thunder Stats API",
-    description="API для получения статистики игроков War Thunder",
+    title="GameStats API",
+    description="Универсальная платформа игровой статистики",
     version="1.0.0"
 )
 
-# CORS middleware
+# Настройка CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # В продакшене укажите конкретные домены
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Кэш для хранения данных
+# Кэш для данных
 cache = {}
 CACHE_DURATION = 300  # 5 минут
 
-class WarThunderAPI:
+class PlayerStats(BaseModel):
+    username: str
+    level: int
+    clan: Optional[Dict[str, Any]] = None
+    general: Dict[str, Any]
+    aviation: Optional[Dict[str, Any]] = None
+    tanks: Optional[Dict[str, Any]] = None
+    fleet: Optional[Dict[str, Any]] = None
+    achievements: Optional[list] = None
+    charts: Optional[Dict[str, Any]] = None
+    top_vehicles: Optional[list] = None
+
+class GameStatsAPI:
     def __init__(self):
-        self.session = httpx.AsyncClient(timeout=30.0)
         self.base_urls = {
-            'ru': 'https://warthunder.com/ru/community/userinfo',
-            'en': 'https://warthunder.com/en/community/userinfo',
-            'de': 'https://warthunder.com/de/community/userinfo',
-            'fr': 'https://warthunder.com/fr/community/userinfo'
+            'en': 'https://gamestats.com/en/community/userinfo',
+            'ru': 'https://gamestats.com/ru/community/userinfo'
         }
-    
-    async def get_player_stats(self, username: str, region: str = 'en') -> Dict[str, Any]:
-        """Получение статистики игрока"""
-        cache_key = f"{username}_{region}"
-        
-        # Проверяем кэш
-        if cache_key in cache:
-            cached_data, timestamp = cache[cache_key]
-            if time.time() - timestamp < CACHE_DURATION:
-                return cached_data
-        
-        try:
-            logger.info(f"Fetching stats for player: {username} in region: {region} [Playwright]")
-            
-            # Пытаемся получить реальные данные
-            url = f"{self.base_urls[region]}?nick={username}"
-            try:
-                html = await self._fetch_profile_playwright(url)
-            except Exception as e:
-                logger.warning(f"Playwright failed: {e}. Trying ScrapingAnt...")
-                html = await self._fetch_profile_scrapingant(url)
-            soup = BeautifulSoup(html, 'html.parser')
-            
-            # Проверяем, существует ли игрок
-            error_div = soup.find('div', class_='error')
-            if error_div:
-                raise HTTPException(status_code=404, detail="Player not found")
-            
-            # Парсим данные
-            stats = self._parse_player_page(soup, username)
-            
-            # Проверяем, что получили хоть какие-то данные
-            if not stats.get('general', {}).get('total_battles', 0):
-                logger.warning(f"No valid data found for player {username}, using demo data")
-                stats = self._get_demo_stats(username)
-                stats['__debug__'] = 'No valid data parsed from profile page'
-            
-            # Кэшируем результат
-            cache[cache_key] = (stats, time.time())
-            
-            logger.info(f"Successfully fetched stats for player: {username}")
-            return stats
-            
-        except Exception as e:
-            logger.error(f"Error fetching player data for {username}: {str(e)}")
-            import traceback
-            tb = traceback.format_exc()
-            stats = self._get_demo_stats(username)
-            stats['__debug__'] = f'Exception: {str(e)}\nTraceback: {tb}'
-            cache[cache_key] = (stats, time.time())
-            return stats
-    
-    async def _fetch_profile_playwright(self, url: str) -> str:
-        async with async_playwright() as p:
-            browser = await p.chromium.launch(
-                headless=True,
-                args=[
-                    "--no-sandbox",
-                    "--disable-setuid-sandbox",
-                    "--disable-dev-shm-usage",
-                    "--disable-gpu",
-                    "--disable-software-rasterizer",
-                    "--disable-extensions",
-                    "--disable-background-networking",
-                    "--disable-sync",
-                    "--disable-translate",
-                    "--disable-default-apps",
-                    "--hide-scrollbars",
-                    "--mute-audio",
-                    "--no-zygote",
-                    "--single-process",
-                    "--disable-gl-drawing-for-tests",
-                ]
-            )
-            page = await browser.new_page()
-            await page.goto(url, timeout=60000)
-            await page.wait_for_selector('body', timeout=20000)
-            html = await page.content()
-            await browser.close()
-            return html
-    
-    async def _fetch_profile_scrapingant(self, url: str) -> str:
-        api_key = os.getenv('SCRAPINGANT_API_KEY')
-        if not api_key:
-            raise Exception('SCRAPINGANT_API_KEY not set')
-        api_url = f"https://api.scrapingant.com/v2/general"
-        params = {
-            "url": url,
-            "x-api-key": api_key,
-            "browser": "true"
-        }
-        async with httpx.AsyncClient() as client:
-            resp = await client.get(api_url, params=params, timeout=60)
-            resp.raise_for_status()
-            return resp.text
     
     def _get_demo_stats(self, username: str) -> Dict[str, Any]:
-        """Возвращает демо-данные для игрока"""
+        """Генерирует демо-данные для игрока"""
         return {
             "username": username,
             "level": 85,
-            "clan": {"name": "THUNDER", "tag": "THD"},
+            "clan": {
+                "name": "THUNDER",
+                "tag": "THD",
+                "role": "Member",
+                "member_since": "2021-01-15",
+                "clan_level": 25
+            },
             "general": {
                 "level": 85,
                 "total_battles": 15420,
@@ -218,25 +140,185 @@ class WarThunderAPI:
                     "unlocked": True
                 }
             ],
-            "clan": {
-                "name": "THUNDER",
-                "tag": "THD",
-                "role": "Member",
-                "member_since": "2021-01-15",
-                "clan_level": 25
-            },
             "charts": {
                 "performance_over_time": [],
                 "vehicle_usage": [],
                 "nation_stats": []
             },
             "top_vehicles": [
-                {"name": "F-16 Fighting Falcon", "type": "air", "battles": 1247, "icon": "https://static.warthunder.com/upload/image/aircraft/f16.png"},
-                {"name": "M1A2 Abrams", "type": "ground", "battles": 892, "icon": "https://static.warthunder.com/upload/image/tanks/m1a2.png"},
-                {"name": "USS Iowa", "type": "fleet", "battles": 456, "icon": "https://static.warthunder.com/upload/image/ships/iowa.png"}
+                {
+                    "name": "F-16 Fighting Falcon",
+                    "type": "air",
+                    "battles": 1247,
+                    "icon": "https://static.gamestats.com/upload/image/aircraft/f16.png"
+                },
+                {
+                    "name": "M1A2 Abrams",
+                    "type": "ground",
+                    "battles": 892,
+                    "icon": "https://static.gamestats.com/upload/image/tanks/m1a2.png"
+                },
+                {
+                    "name": "USS Iowa",
+                    "type": "fleet",
+                    "battles": 456,
+                    "icon": "https://static.gamestats.com/upload/image/ships/iowa.png"
+                }
             ]
         }
     
+    async def get_player_stats(self, username: str, region: str = 'en') -> Dict[str, Any]:
+        """Получение статистики игрока"""
+        cache_key = f"{username}_{region}"
+        
+        # Проверяем кэш
+        if cache_key in cache:
+            cached_data, timestamp = cache[cache_key]
+            if time.time() - timestamp < CACHE_DURATION:
+                return cached_data
+        
+        # Сначала возвращаем демо-данные для быстрого ответа
+        demo_data = self._get_demo_stats(username)
+        
+        # В фоне пытаемся получить реальные данные
+        try:
+            logger.info(f"Background fetch for player: {username} in region: {region}")
+            real_data = await self._fetch_from_local_api(username, region)
+            if real_data and not real_data.get('error'):
+                # Преобразуем формат данных для совместимости
+                transformed_data = self._transform_local_api_data(real_data)
+                if transformed_data:
+                    cache[cache_key] = (transformed_data, time.time())
+                    return transformed_data
+        except Exception as e:
+            logger.warning(f"Background fetch failed for {username}: {e}")
+        
+        # Возвращаем демо-данные
+        cache[cache_key] = (demo_data, time.time())
+        return demo_data
+    
+    async def _fetch_from_local_api(self, username: str, region: str) -> Optional[Dict[str, Any]]:
+        """Получение данных от локального Flask API"""
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(f"http://localhost:8080/profile", params={
+                    "username": username,
+                    "region": region
+                })
+                if response.status_code == 200:
+                    return response.json()
+                else:
+                    logger.error(f"Local API request failed: {response.status_code}")
+                    return None
+        except Exception as e:
+            logger.error(f"Local API request failed: {e}")
+            return None
+    
+    def _transform_local_api_data(self, local_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Преобразование данных из локального Flask API в формат FastAPI"""
+        try:
+            return {
+                "username": local_data.get("username", ""),
+                "general": {
+                    "level": local_data.get("level", 0),
+                    "total_battles": local_data.get("total_battles", 0),
+                    "wins": local_data.get("wins", 0),
+                    "losses": local_data.get("losses", 0),
+                    "win_rate": local_data.get("win_rate", 0.0),
+                    "kills": local_data.get("kills", 0),
+                    "deaths": local_data.get("deaths", 0),
+                    "kdr": local_data.get("kdr", 0.0),
+                    "ground_battles": local_data.get("ground_battles", 0),
+                    "air_battles": local_data.get("air_battles", 0),
+                    "naval_battles": local_data.get("naval_battles", 0)
+                },
+                "vehicles": {
+                    "top_vehicle": local_data.get("top_vehicle", {}),
+                    "total_vehicles": local_data.get("total_vehicles", 0)
+                },
+                "profile": {
+                    "registration_date": local_data.get("registration_date", ""),
+                    "last_online": local_data.get("last_online", ""),
+                    "clan": local_data.get("clan", "")
+                },
+                "__source__": "local_flask_api"
+            }
+        except Exception as e:
+            logger.error(f"Error transforming local API data: {e}")
+            return None
+
+# Создаем экземпляр API
+wt_api = GameStatsAPI()
+
+@app.get("/")
+async def root():
+    """Корневой эндпоинт"""
+    return {
+        "message": "GameStats API",
+        "version": "1.0.0",
+        "description": "Универсальная платформа игровой статистики"
+    }
+
+@app.get("/health")
+async def health_check():
+    """Проверка состояния сервиса"""
+    return {"status": "healthy", "timestamp": time.time()}
+
+@app.get("/player/{username}")
+async def get_player_stats(username: str, region: str = Query('en', description="Регион игрока")):
+    """Получить статистику игрока"""
+    try:
+        stats = await wt_api.get_player_stats(username, region)
+        return stats
+    except Exception as e:
+        logger.error(f"Error fetching player data for {username}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.get("/player/{username}/refresh")
+async def refresh_player_stats(username: str, region: str = 'en'):
+    """Принудительное обновление данных игрока через локальный API"""
+    try:
+        logger.info(f"Manual refresh requested for player: {username}")
+        
+        # Очищаем кэш для этого игрока
+        cache_key = f"{username}_{region}"
+        if cache_key in cache:
+            del cache[cache_key]
+        
+        # Пытаемся получить реальные данные
+        real_data = await wt_api._fetch_from_local_api(username, region)
+        if real_data and not real_data.get('error'):
+            transformed_data = wt_api._transform_local_api_data(real_data)
+            if transformed_data:
+                cache[cache_key] = (transformed_data, time.time())
+                return {
+                    "success": True,
+                    "message": "Real data updated successfully",
+                    "data": transformed_data,
+                    "source": "local_flask_api"
+                }
+        
+        # Если не удалось, возвращаем демо-данные
+        demo_data = wt_api._get_demo_stats(username)
+        cache[cache_key] = (demo_data, time.time())
+        return {
+            "success": False,
+            "message": "Using demo data (local API unavailable)",
+            "data": demo_data,
+            "source": "demo_data"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error refreshing player data: {e}")
+        return {
+            "success": False,
+            "message": f"Error: {str(e)}",
+            "data": wt_api._get_demo_stats(username),
+            "source": "demo_data"
+        }
+
+if __name__ == "__main__":
+    import uvicorn
     def _parse_player_page(self, soup: BeautifulSoup, username: str) -> Dict[str, Any]:
         """Парсинг страницы игрока"""
         stats = {
@@ -607,6 +689,51 @@ class WarThunderAPI:
         """Закрытие сессии"""
         await self.session.aclose()
 
+    async def _fetch_from_local_api(self, username: str, region: str) -> Dict[str, Any]:
+        """Получает данные от локального Flask API"""
+        local_api_url = f"http://localhost:8080/profile?username={username}&region={region}"
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.get(local_api_url)
+                response.raise_for_status()
+                return response.json()
+        except Exception as e:
+            logger.error(f"Local API request failed: {e}")
+            raise
+    
+    def _transform_local_api_data(self, local_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Преобразование данных из локального Flask API в формат FastAPI"""
+        try:
+            return {
+                "username": local_data.get("username", ""),
+                "general": {
+                    "level": local_data.get("level", 0),
+                    "total_battles": local_data.get("total_battles", 0),
+                    "wins": local_data.get("wins", 0),
+                    "losses": local_data.get("losses", 0),
+                    "win_rate": local_data.get("win_rate", 0.0),
+                    "kills": local_data.get("kills", 0),
+                    "deaths": local_data.get("deaths", 0),
+                    "kdr": local_data.get("kdr", 0.0),
+                    "ground_battles": local_data.get("ground_battles", 0),
+                    "air_battles": local_data.get("air_battles", 0),
+                    "naval_battles": local_data.get("naval_battles", 0)
+                },
+                "vehicles": {
+                    "top_vehicle": local_data.get("top_vehicle", {}),
+                    "total_vehicles": local_data.get("total_vehicles", 0)
+                },
+                "profile": {
+                    "registration_date": local_data.get("registration_date", ""),
+                    "last_online": local_data.get("last_online", ""),
+                    "clan": local_data.get("clan", "")
+                },
+                "__source__": "local_flask_api"
+            }
+        except Exception as e:
+            logger.error(f"Error transforming local API data: {e}")
+            return None
+
 # Создаем экземпляр API
 wt_api = WarThunderAPI()
 
@@ -698,6 +825,49 @@ async def compare_players(
     except Exception as e:
         logger.error(f"Error in compare_players: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.get("/player/{username}/refresh")
+async def refresh_player_stats(username: str, region: str = 'en'):
+    """Принудительное обновление данных игрока через локальный API"""
+    try:
+        logger.info(f"Manual refresh requested for player: {username}")
+        
+        # Очищаем кэш для этого игрока
+        cache_key = f"{username}_{region}"
+        if cache_key in cache:
+            del cache[cache_key]
+        
+        # Пытаемся получить реальные данные
+        real_data = await wt_api._fetch_from_local_api(username, region)
+        if real_data and not real_data.get('error'):
+            transformed_data = wt_api._transform_local_api_data(real_data)
+            if transformed_data:
+                cache[cache_key] = (transformed_data, time.time())
+                return {
+                    "success": True,
+                    "message": "Real data updated successfully",
+                    "data": transformed_data,
+                    "source": "local_flask_api"
+                }
+        
+        # Если не удалось, возвращаем демо-данные
+        demo_data = wt_api._get_demo_stats(username)
+        cache[cache_key] = (demo_data, time.time())
+        return {
+            "success": False,
+            "message": "Using demo data (local API unavailable)",
+            "data": demo_data,
+            "source": "demo_data"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error refreshing player data: {e}")
+        return {
+            "success": False,
+            "message": f"Error: {str(e)}",
+            "data": wt_api._get_demo_stats(username),
+            "source": "demo_data"
+        }
 
 if __name__ == "__main__":
     import uvicorn

@@ -1,7 +1,6 @@
 # Python files (for backend - not needed on Netlify)
 *.py
 requirements.txt
-mini_app_bot.py
 config.py
 __pycache__/
 *.pyc

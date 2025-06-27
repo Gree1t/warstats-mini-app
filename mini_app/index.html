@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>War Thunder Stats</title>
+    <title>GameStats</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -13,7 +13,7 @@
         <!-- Header -->
         <header class="header">
             <div class="header-content">
-                <h1 class="logo">🎮 WT Stats</h1>
+                <h1 class="logo">🎮 GameStats</h1>
                 <div class="header-actions">
                     <button class="btn-icon" id="settingsBtn">⚙️</button>
                     <button class="btn-icon" id="themeBtn">🌙</button>
@@ -27,8 +27,9 @@
             <section class="search-section">
                 <div class="search-container">
                     <div class="search-input-wrapper">
-                        <input type="text" id="playerSearch" placeholder="Введите никнейм игрока..." class="search-input">
-                        <button id="searchBtn" class="search-btn">🔍</button>
+                        <input type="text" id="playerInput" placeholder="Введите имя игрока..." class="search-input">
+                        <button onclick="searchPlayer()" class="search-btn">🔍 Поиск</button>
+                        <button onclick="refreshPlayer()" class="refresh-btn" id="refreshBtn" style="display: none;">🔄 Обновить</button>
                     </div>
                     <div class="quick-search">
                         <button class="quick-search-btn" data-player="JohnDoe">JohnDoe</button>

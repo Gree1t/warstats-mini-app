@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-War Thunder Stats Mini App Bot
-Бот для интеграции с Telegram Mini App
+GameStats Telegram Bot
+Универсальная платформа игровой статистики
 """
 
 import asyncio
@@ -14,30 +14,19 @@ import httpx
 
 # Настройка логирования
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    format='%(asctime)s - %(name)s - %(levelname)s - %(s)s',
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
 
-# Получаем токен из config.py
-try:
-    from config import Config
-    TELEGRAM_TOKEN = Config.TELEGRAM_BOT_TOKEN
-except ImportError:
-    TELEGRAM_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+# Конфигурация
+TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN', 'your-bot-token-here')
+BACKEND_URL = os.getenv('BACKEND_URL', 'https://gamestats-backend.onrender.com')
+MINI_APP_URL = os.getenv('MINI_APP_URL', 'https://gamestats-mini-app.netlify.app')
 
-if not TELEGRAM_TOKEN:
-    raise ValueError("TELEGRAM_BOT_TOKEN не найден в config.py или переменных окружения")
-
-# URL вашей Mini App (замените на ваш домен после развертывания)
-MINI_APP_URL = "https://miniappwar.netlify.app"
-
-# Если у вас есть ссылка на развернутое приложение, замените строку выше на:
-# MINI_APP_URL = "https://your-app-name.netlify.app"
-
-class MiniAppBot:
+class GameStatsBot:
     def __init__(self):
-        self.application = Application.builder().token(str(TELEGRAM_TOKEN)).build()
+        self.application = Application.builder().token(TELEGRAM_TOKEN).build()
         self.setup_handlers()
     
     def setup_handlers(self):
@@ -65,9 +54,9 @@ class MiniAppBot:
         
         # Приветственное сообщение с кнопкой открытия Mini App
         welcome_text = f"""
-🎮 Привет, {user.first_name}!
+🎮 Добро пожаловать в **GameStats**!
 
-Добро пожаловать в **War Thunder Stats** - современное приложение для просмотра статистики игроков!
+Ваша универсальная платформа игровой статистики.
 
 🚀 **Что умеет приложение:**
 • 🔍 Поиск игроков по никнейму
@@ -81,7 +70,7 @@ class MiniAppBot:
         
         keyboard = [
             [InlineKeyboardButton(
-                "🎮 Открыть War Thunder Stats", 
+                "🎮 Открыть GameStats", 
                 web_app=WebAppInfo(url=MINI_APP_URL)
             )]
         ]
@@ -139,7 +128,7 @@ class MiniAppBot:
             return
             
         stats_text = """
-📊 **Статистика War Thunder**
+📊 **Статистика GameStats**
 
 Выберите, что хотите посмотреть:
 
@@ -205,7 +194,7 @@ class MiniAppBot:
             return
             
         top_text = """
-🏆 **Топ игроков War Thunder**
+🏆 **Топ игроков GameStats**
 
 Выберите категорию:
 
@@ -340,7 +329,7 @@ class MiniAppBot:
         # Добавляем обработчик ошибок
         self.application.add_error_handler(self.error_handler)
         
-        logger.info("Starting War Thunder Stats Mini App Bot...")
+        logger.info("Starting GameStats bot...")
         
         # Запускаем бота
         self.application.run_polling(
@@ -350,7 +339,7 @@ class MiniAppBot:
 
 def main():
     """Главная функция"""
-    bot = MiniAppBot()
+    bot = GameStatsBot()
     bot.run()
 
 if __name__ == "__main__":

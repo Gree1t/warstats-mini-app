@@ -91,7 +91,7 @@ function setupEventListeners() {
 
 function showWelcomeMessage() {
     // Show welcome message using Telegram Web App
-    tg.showAlert('🎮 Добро пожаловать в War Thunder Stats!\n\nНачните с поиска игрока для просмотра статистики.');
+    tg.showAlert('�� Добро пожаловать в GameStats!\n\nНачните с поиска игрока для просмотра статистики.');
 }
 
 function handleSearch() {
@@ -110,7 +110,7 @@ function handleSearch() {
 
 function searchPlayer(playerName) {
     // Use real API
-    const apiUrl = 'https://warstats-backend.onrender.com';
+    const apiUrl = 'https://gamestats-backend.onrender.com';
     
     fetch(`${apiUrl}/player/${encodeURIComponent(playerName)}`)
         .then(response => {
@@ -204,29 +204,36 @@ function searchPlayer(playerName) {
                         unlocked: true
                     }
                 ],
-                clan: {
-                    name: "THUNDER",
-                    tag: "THD",
-                    role: "Member",
-                    member_since: "2021-01-15",
-                    clan_level: 25
-                },
                 charts: {
                     performance_over_time: [],
                     vehicle_usage: [],
                     nation_stats: []
                 },
                 top_vehicles: [
-                    {"name": "F-16 Fighting Falcon", "type": "air", "battles": 1247, "icon": "https://static.warthunder.com/upload/image/aircraft/f16.png"},
-                    {"name": "M1A2 Abrams", "type": "ground", "battles": 892, "icon": "https://static.warthunder.com/upload/image/tanks/m1a2.png"},
-                    {"name": "USS Iowa", "type": "fleet", "battles": 456, "icon": "https://static.warthunder.com/upload/image/ships/iowa.png"}
+                    {
+                        name: "F-16 Fighting Falcon",
+                        type: "air",
+                        battles: 1247,
+                        icon: "https://static.gamestats.com/upload/image/aircraft/f16.png"
+                    },
+                    {
+                        name: "M1A2 Abrams",
+                        type: "ground",
+                        battles: 892,
+                        icon: "https://static.gamestats.com/upload/image/tanks/m1a2.png"
+                    },
+                    {
+                        name: "USS Iowa",
+                        type: "fleet",
+                        battles: 456,
+                        icon: "https://static.gamestats.com/upload/image/ships/iowa.png"
+                    }
                 ]
             };
-            
             currentPlayer = demoData;
             displayPlayerStats(demoData);
             showLoading(false);
-            tg.showAlert(`✅ Найден игрок: ${playerName} (демо-данные)`);
+            tg.showAlert(`⚠️ Используются демо-данные для: ${playerName}`);
         });
 }
 
@@ -295,6 +302,12 @@ function displayPlayerStats(playerData) {
     if (statsOverview) {
         statsOverview.style.display = 'block';
         statsOverview.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    // Show refresh button
+    const refreshBtn = document.getElementById('refreshBtn');
+    if (refreshBtn) {
+        refreshBtn.style.display = 'inline-block';
     }
     
     // Show back button
@@ -540,7 +553,7 @@ function showBackButton() {
 tg.MainButton.onClick(() => {
     if (currentPlayer) {
         // Share player stats
-        const shareText = `🎮 ${currentPlayer.username || currentPlayer.general?.name} - War Thunder Stats\n\n` +
+        const shareText = `🎮 ${currentPlayer.username || currentPlayer.general?.name} - GameStats\n\n` +
                          `Уровень: ${currentPlayer.level || currentPlayer.general?.level}\n` +
                          `Боев: ${formatNumber((currentPlayer.stats || currentPlayer.general || {}).total_battles || 0)}\n` +
                          `Винрейт: ${((currentPlayer.stats || currentPlayer.general || {}).winrate || 0).toFixed(1)}%\n` +
@@ -548,4 +561,41 @@ tg.MainButton.onClick(() => {
         
         tg.sendData(shareText);
     }
-}); 
+});
+
+function refreshPlayer() {
+    if (!currentPlayer || !currentPlayer.username) {
+        tg.showAlert('Сначала найдите игрока для обновления данных');
+        return;
+    }
+    
+    showLoading(true);
+    tg.showAlert('🔄 Обновляем данные...');
+    
+    const apiUrl = 'https://gamestats-backend.onrender.com';
+    
+    fetch(`${apiUrl}/player/${encodeURIComponent(currentPlayer.username)}/refresh`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                currentPlayer = data.data;
+                displayPlayerStats(data.data);
+                tg.showAlert(`✅ Данные обновлены! Источник: ${data.source}`);
+            } else {
+                currentPlayer = data.data;
+                displayPlayerStats(data.data);
+                tg.showAlert(`⚠️ ${data.message}`);
+            }
+            showLoading(false);
+        })
+        .catch(error => {
+            console.error('Error refreshing player data:', error);
+            showLoading(false);
+            tg.showAlert('❌ Ошибка при обновлении данных');
+        });
+} 
