@@ -10,5 +10,4 @@ services:
         value: 3.9.16
     healthCheckPath: /health
     autoDeploy: true
-    branch: main
-    repo: Gree1t/warstats-mini-app 
+    branch: main 
