@@ -3,8 +3,7 @@
 
 [build]
   publish = "mini_app"
-  command = ""
-  ignore = "*.py,requirements.txt,backend.py,mini_app_bot.py,config.py"
+  command = "echo 'GameStats Mini App - No build required'"
 
 # SPA redirects - all routes go to index.html
 [[redirects]]
@@ -20,7 +19,7 @@
     X-Frame-Options = "DENY"
     X-XSS-Protection = "1; mode=block"
     X-Content-Type-Options = "nosniff"
-    Cache-Control = "no-cache, no-store, must-revalidate"
+    Referrer-Policy = "strict-origin-when-cross-origin"
 
 # Ignore Python files during build
 [build.environment]

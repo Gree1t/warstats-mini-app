@@ -1,138 +1,205 @@
-# 🎮 GameStats - Универсальная платформа игровой статистики
+# GameStats Platform
 
-Современная платформа для отслеживания игровой статистики с Telegram ботом и веб-приложением.
+A universal gaming statistics platform that provides comprehensive player analytics and statistics for various games. The platform consists of a FastAPI backend, Flask scraper API, Telegram bot, and a modern web frontend.
 
-## ✨ Возможности
+## 🎮 Features
 
-- 🤖 **Telegram Bot** - быстрый доступ к статистике через чат
-- 📱 **Mini App** - полнофункциональное веб-приложение в Telegram
-- 🔄 **Real-time данные** - актуальная статистика в реальном времени
-- 📊 **Детальная аналитика** - подробная статистика по всем аспектам игры
-- 🎯 **Умный поиск** - быстрый поиск игроков по никнейму
-- 🌐 **API** - RESTful API для интеграции с другими сервисами
+- **Universal Game Support**: Designed to work with multiple gaming platforms
+- **Real-time Statistics**: Live player data fetching and analysis
+- **Hybrid Data System**: Combines real-time scraping with fallback demo data
+- **Telegram Bot Integration**: Easy access to player stats via Telegram
+- **Modern Web Interface**: Responsive Mini App frontend
+- **RESTful API**: Comprehensive API for third-party integrations
+- **Cloudflare Bypass**: Advanced scraping techniques to overcome anti-bot measures
 
-## 🚀 Быстрый старт
+## 🏗️ Architecture
 
-### Предварительные требования
-- Python 3.8+
-- Node.js 16+
-- Telegram Bot Token
+```
+GameStats Platform
+├── Backend (FastAPI)          # Main API server
+├── Scraper (Flask)           # Local data scraping service
+├── Telegram Bot              # Bot for Telegram integration
+├── Mini App (Frontend)       # Web interface
+└── Documentation             # Setup and deployment guides
+```
 
-### Установка
+## 🚀 Quick Start
 
-1. **Клонируйте репозиторий**
+### Prerequisites
+
+- Python 3.11+
+- Chrome/Chromium browser
+- Git
+- Node.js (for development)
+
+### Local Development
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd GameStats
+   ```
+
+2. **Setup Backend**
+   ```bash
+   cd backend
+   pip install -r requirements.txt
+   python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+   ```
+
+3. **Setup Scraper API**
+   ```bash
+   cd wt_profile_api
+   pip install -r requirements.txt
+   python warthunder_profile_api.py
+   ```
+
+4. **Setup Telegram Bot**
+   ```bash
+   pip install -r requirements.txt
+   python mini_app_bot.py
+   ```
+
+5. **Open Frontend**
+   ```bash
+   # Open mini_app/index.html in your browser
+   # Or serve with a local server
+   python -m http.server 3000
+   ```
+
+## 📁 Project Structure
+
+```
+GameStats/
+├── backend/                  # FastAPI backend
+│   ├── main.py              # Main API server
+│   ├── requirements.txt     # Python dependencies
+│   └── Dockerfile          # Container configuration
+├── wt_profile_api/          # Flask scraper service
+│   ├── warthunder_profile_api.py
+│   ├── requirements.txt
+│   └── Dockerfile
+├── mini_app/               # Frontend application
+│   ├── index.html          # Main page
+│   ├── app.js              # Application logic
+│   ├── styles.css          # Styling
+│   └── _redirects          # Netlify configuration
+├── mini_app_bot.py         # Telegram bot
+├── deploy.sh               # Deployment script
+├── render.yaml             # Render deployment config
+├── netlify.toml            # Netlify configuration
+└── README.md               # This file
+```
+
+## 🔧 Configuration
+
+### Environment Variables
+
+Create a `.env` file in the root directory:
+
+```env
+# Telegram Bot
+TELEGRAM_BOT_TOKEN=your_bot_token_here
+TELEGRAM_BOT_USERNAME=your_bot_username
+
+# API Configuration
+BACKEND_URL=http://localhost:8000
+SCRAPER_URL=http://localhost:8080
+
+# Database (if using)
+DATABASE_URL=your_database_url
+```
+
+### API Endpoints
+
+#### Backend API (FastAPI)
+
+- `GET /` - API information
+- `GET /health` - Health check
+- `GET /player/{username}` - Get player statistics
+- `GET /player/{username}/refresh` - Force refresh player data
+- `GET /top` - Get top players
+- `GET /compare` - Compare two players
+
+#### Scraper API (Flask)
+
+- `GET /profile?username={username}&region={region}` - Get player profile
+- `GET /health` - Health check
+
+## 🚀 Deployment
+
+### Automated Deployment
+
+Run the deployment script:
+
 ```bash
-git clone https://github.com/yourusername/gamestats.git
-cd gamestats
+chmod +x deploy.sh
+./deploy.sh
 ```
 
-2. **Настройте переменные окружения**
-```bash
-cp backend/env.example backend/.env
-# Отредактируйте .env файл
-```
+### Manual Deployment
 
-3. **Запустите бэкенд**
-```bash
-cd backend
-pip install -r requirements.txt
-python -m uvicorn main:app --host 0.0.0.0 --port 8000
-```
+1. **Backend (Render)**
+   - Connect your GitHub repository to Render
+   - Set build command: `pip install -r backend/requirements.txt`
+   - Set start command: `cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT`
 
-4. **Запустите Telegram бота**
-```bash
-python mini_app_bot.py
-```
+2. **Frontend (Netlify)**
+   - Connect your GitHub repository to Netlify
+   - Set build directory: `mini_app`
+   - Set publish directory: `mini_app`
 
-## 📱 Использование
+3. **Telegram Bot**
+   - Deploy to any Python hosting service
+   - Set environment variables for bot token
 
-### Telegram Bot
-- Отправьте `/start` для начала работы
-- Используйте `/stats <username>` для поиска игрока
-- Навигация через интерактивные кнопки
+## 🔒 Security Features
 
-### Mini App
-- Откройте Mini App в Telegram
-- Введите никнейм игрока
-- Просматривайте детальную статистику
-- Используйте кнопку "Обновить" для актуальных данных
+- **CORS Configuration**: Properly configured for production
+- **Input Validation**: All user inputs are validated
+- **Rate Limiting**: Built-in protection against abuse
+- **Error Handling**: Comprehensive error handling and logging
+- **Cloudflare Bypass**: Advanced techniques to handle anti-bot measures
 
-## 🏗️ Архитектура
+## 📊 Data Sources
 
-```
-Telegram Bot ←→ FastAPI Backend ←→ Data Sources
-     ↓              ↓                    ↓
-Mini App ←→ FastAPI Backend ←→ Game APIs
-```
+The platform uses a hybrid approach:
 
-### Компоненты
+1. **Real-time Scraping**: Direct data extraction from game websites
+2. **Demo Data**: Fallback data for testing and development
+3. **Caching**: Intelligent caching to reduce server load
+4. **Background Updates**: Asynchronous data updates
 
-- **Frontend**: HTML5, CSS3, JavaScript (Telegram Web App)
-- **Backend**: FastAPI (Python)
-- **Bot**: python-telegram-bot
-- **Data**: Multiple sources with fallback system
-- **Deployment**: Render, Netlify
+## 🤝 Contributing
 
-## 🔧 API Endpoints
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
-- `GET /player/{username}` - получить статистику игрока
-- `GET /player/{username}/refresh` - обновить данные игрока
-- `GET /health` - проверка состояния сервиса
+## 📝 License
 
-## 📊 Источники данных
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-Платформа использует гибридный подход:
-1. **Основные источники** - официальные API игр
-2. **Резервные источники** - веб-скрапинг с обходом защиты
-3. **Fallback система** - демо-данные при недоступности реальных
+## 🆘 Support
 
-## 🛡️ Безопасность
+For support and questions:
 
-- Валидация входных данных
-- Rate limiting
-- CORS настройки
-- Безопасное хранение токенов
-- Защита от DDoS атак
+- Create an issue in the GitHub repository
+- Check the documentation in the `/docs` folder
+- Review the deployment guides
 
-## 🚀 Развертывание
+## 🔄 Updates
 
-### Backend (Render)
-```bash
-# Автоматическое развертывание через render.yaml
-```
+The platform is actively maintained and updated with:
 
-### Frontend (Netlify)
-```bash
-# Автоматическое развертывание через netlify.toml
-```
-
-## 🤝 Вклад в проект
-
-1. Fork репозитория
-2. Создайте feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit изменения (`git commit -m 'Add amazing feature'`)
-4. Push в branch (`git push origin feature/amazing-feature`)
-5. Откройте Pull Request
-
-## 📄 Лицензия
-
-Этот проект лицензирован под MIT License - см. файл [LICENSE](LICENSE) для деталей.
-
-## 📞 Поддержка
-
-- 📧 Email: support@gamestats.com
-- 💬 Telegram: @gamestats_support
-- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/gamestats/issues)
-
-## 🎯 Roadmap
-
-- [ ] Поддержка новых игр
-- [ ] Мобильное приложение
-- [ ] Социальные функции
-- [ ] Турнирная система
-- [ ] Аналитика команды
-- [ ] Интеграция с Discord
+- New game support
+- Improved scraping techniques
+- Enhanced UI/UX
+- Performance optimizations
+- Security updates
 
 ---
 
-**GameStats** - Ваша универсальная платформа игровой статистики! 🎮 
+**GameStats Platform** - Universal gaming statistics for everyone! 🎮📊 

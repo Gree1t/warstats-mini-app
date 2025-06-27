@@ -1,38 +1,86 @@
 #!/bin/bash
 
-echo "🚀 Starting automatic deployment..."
+echo "🚀 Deploying GameStats Platform..."
 
-# Check if we're in the right directory
-if [ ! -f "netlify.toml" ]; then
-    echo "❌ Error: netlify.toml not found. Make sure you're in the project root."
+# Проверяем наличие необходимых файлов
+if [ ! -f "backend/main.py" ]; then
+    echo "❌ Error: backend/main.py not found"
     exit 1
 fi
 
-# Add all changes
-echo "📦 Adding all changes to git..."
-git add .
-
-# Check if there are changes to commit
-if git diff --cached --quiet; then
-    echo "ℹ️  No changes to commit."
-else
-    # Commit changes
-    echo "💾 Committing changes..."
-    git commit -m "Auto-deploy: $(date '+%Y-%m-%d %H:%M:%S')"
-    
-    # Push to GitHub
-    echo "📤 Pushing to GitHub..."
-    git push origin main
-    
-    echo "✅ Changes pushed to GitHub!"
-    echo "🔄 Netlify will automatically deploy the frontend..."
-    echo "🔄 Render will automatically deploy the backend..."
+if [ ! -f "mini_app/index.html" ]; then
+    echo "❌ Error: mini_app/index.html not found"
+    exit 1
 fi
 
-echo "🎉 Deployment process completed!"
+echo "✅ All required files found"
+
+# Создаем .gitignore если его нет
+if [ ! -f ".gitignore" ]; then
+    echo "📝 Creating .gitignore..."
+    cat > .gitignore << EOF
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Chrome debug files
+debug_*.html
+
+# Environment variables
+.env
+.env.local
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+EOF
+fi
+
+# Проверяем статус git
+if [ ! -d ".git" ]; then
+    echo "📦 Initializing git repository..."
+    git init
+    git add .
+    git commit -m "Initial GameStats platform commit"
+fi
+
+# Проверяем изменения
+if [ -n "$(git status --porcelain)" ]; then
+    echo "📝 Committing changes..."
+    git add .
+    git commit -m "Update GameStats platform - $(date)"
+fi
+
+echo "✅ Deployment preparation completed"
 echo ""
 echo "📋 Next steps:"
-echo "1. Wait 1-2 minutes for Netlify to deploy frontend"
-echo "2. Wait 2-3 minutes for Render to deploy backend"
-echo "3. Test the application at your Netlify URL"
-echo "4. Test the API at https://warstats-backend.onrender.com/health" 
+echo "1. Push to GitHub: git push origin main"
+echo "2. Deploy backend to Render: https://render.com"
+echo "3. Deploy frontend to Netlify: https://netlify.com"
+echo ""
+echo "🔗 Backend API: https://gamestats-api.onrender.com"
+echo "🔗 Frontend App: https://gamestats-mini-app.netlify.app"
+echo ""
+echo "🎉 GameStats Platform is ready for deployment!" 

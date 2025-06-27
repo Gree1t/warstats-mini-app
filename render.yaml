@@ -1,13 +1,13 @@
 services:
   - type: web
-    name: warstats-backend
+    name: gamestats-api
     env: python
     plan: free
-    buildCommand: cd backend && pip install -r requirements.txt
+    buildCommand: pip install -r backend/requirements.txt
     startCommand: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
-        value: 3.9.16
+        value: 3.11.0
     healthCheckPath: /health
     autoDeploy: true
     branch: main 
