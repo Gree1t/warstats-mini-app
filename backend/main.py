@@ -94,10 +94,29 @@ class WarThunderAPI:
     
     async def _fetch_profile_playwright(self, url: str) -> str:
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
+            browser = await p.chromium.launch(
+                headless=True,
+                args=[
+                    "--no-sandbox",
+                    "--disable-setuid-sandbox",
+                    "--disable-dev-shm-usage",
+                    "--disable-gpu",
+                    "--disable-software-rasterizer",
+                    "--disable-extensions",
+                    "--disable-background-networking",
+                    "--disable-sync",
+                    "--disable-translate",
+                    "--disable-default-apps",
+                    "--hide-scrollbars",
+                    "--mute-audio",
+                    "--no-zygote",
+                    "--single-process",
+                    "--disable-gl-drawing-for-tests",
+                ]
+            )
             page = await browser.new_page()
             await page.goto(url, timeout=60000)
-            await page.wait_for_selector('body', timeout=15000)
+            await page.wait_for_selector('body', timeout=20000)
             html = await page.content()
             await browser.close()
             return html
