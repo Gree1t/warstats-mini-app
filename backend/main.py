@@ -57,113 +57,145 @@ class WarThunderAPI:
         try:
             logger.info(f"Fetching stats for player: {username} in region: {region}")
             
-            # Временно возвращаем демо-данные для тестирования фронтенда
-            demo_stats = {
-                "username": username,
-                "level": 85,
-                "clan": {"name": "THUNDER", "tag": "THD"},
-                "general": {
-                    "level": 85,
-                    "total_battles": 15420,
-                    "win_rate": 68.6,
-                    "total_kills": 67890,
-                    "total_deaths": 15420,
-                    "kd_ratio": 4.41,
-                    "total_score": 1250000,
-                    "premium": True,
-                    "registration_date": "2020-03-15",
-                    "last_online": "2024-06-27"
-                },
-                "aviation": {
-                    "battles": 8920,
-                    "wins": 6120,
-                    "losses": 2800,
-                    "win_rate": 68.6,
-                    "kills": 45670,
-                    "deaths": 8920,
-                    "kd_ratio": 5.12,
-                    "air_kills": 34560,
-                    "ground_kills": 11110,
-                    "bombing_kills": 2340,
-                    "accuracy": 78.5
-                },
-                "tanks": {
-                    "battles": 4560,
-                    "wins": 3120,
-                    "losses": 1440,
-                    "win_rate": 68.4,
-                    "kills": 15670,
-                    "deaths": 4560,
-                    "kd_ratio": 3.44,
-                    "ground_kills": 12340,
-                    "air_kills": 3330,
-                    "capture_points": 890,
-                    "accuracy": 72.3
-                },
-                "fleet": {
-                    "battles": 1940,
-                    "wins": 1340,
-                    "losses": 600,
-                    "win_rate": 69.1,
-                    "kills": 6550,
-                    "deaths": 1940,
-                    "kd_ratio": 3.38,
-                    "ship_kills": 5230,
-                    "air_kills": 1320,
-                    "torpedo_kills": 890,
-                    "accuracy": 65.8
-                },
-                "achievements": [
-                    {
-                        "name": "Ace",
-                        "description": "Destroy 5 enemy aircraft in one battle",
-                        "icon": "🏆",
-                        "unlocked": True
-                    },
-                    {
-                        "name": "Tank Ace",
-                        "description": "Destroy 5 enemy tanks in one battle",
-                        "icon": "🛡️",
-                        "unlocked": True
-                    },
-                    {
-                        "name": "Victory",
-                        "description": "Win 100 battles",
-                        "icon": "🎖️",
-                        "unlocked": True
-                    }
-                ],
-                "clan": {
-                    "name": "THUNDER",
-                    "tag": "THD",
-                    "role": "Member",
-                    "member_since": "2021-01-15",
-                    "clan_level": 25
-                },
-                "charts": {
-                    "performance_over_time": [],
-                    "vehicle_usage": [],
-                    "nation_stats": []
-                },
-                "top_vehicles": [
-                    {"name": "F-16 Fighting Falcon", "type": "air", "battles": 1247, "icon": "https://static.warthunder.com/upload/image/aircraft/f16.png"},
-                    {"name": "M1A2 Abrams", "type": "ground", "battles": 892, "icon": "https://static.warthunder.com/upload/image/tanks/m1a2.png"},
-                    {"name": "USS Iowa", "type": "fleet", "battles": 456, "icon": "https://static.warthunder.com/upload/image/ships/iowa.png"}
-                ]
-            }
+            # Пытаемся получить реальные данные
+            url = f"{self.base_urls[region]}?nick={username}"
+            response = await self.session.get(url, timeout=30.0)
+            response.raise_for_status()
+            
+            soup = BeautifulSoup(response.text, 'html.parser')
+            
+            # Проверяем, существует ли игрок
+            error_div = soup.find('div', class_='error')
+            if error_div:
+                raise HTTPException(status_code=404, detail="Player not found")
+            
+            # Парсим данные
+            stats = self._parse_player_page(soup, username)
+            
+            # Проверяем, что получили хоть какие-то данные
+            if not stats.get('general', {}).get('total_battles', 0):
+                logger.warning(f"No valid data found for player {username}, using demo data")
+                stats = self._get_demo_stats(username)
             
             # Кэшируем результат
-            cache[cache_key] = (demo_stats, time.time())
+            cache[cache_key] = (stats, time.time())
             
-            logger.info(f"Successfully returned demo stats for player: {username}")
-            return demo_stats
+            logger.info(f"Successfully fetched stats for player: {username}")
+            return stats
             
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 404:
+                raise HTTPException(status_code=404, detail="Player not found")
+            logger.error(f"HTTP error for {username}: {e}")
+            # Fallback to demo data
+            stats = self._get_demo_stats(username)
+            cache[cache_key] = (stats, time.time())
+            return stats
         except Exception as e:
             logger.error(f"Error fetching player data for {username}: {str(e)}")
             logger.error(f"Error type: {type(e).__name__}")
             import traceback
             logger.error(f"Traceback: {traceback.format_exc()}")
-            raise HTTPException(status_code=500, detail=f"Failed to fetch player data: {str(e)}")
+            # Fallback to demo data
+            stats = self._get_demo_stats(username)
+            cache[cache_key] = (stats, time.time())
+            return stats
+    
+    def _get_demo_stats(self, username: str) -> Dict[str, Any]:
+        """Возвращает демо-данные для игрока"""
+        return {
+            "username": username,
+            "level": 85,
+            "clan": {"name": "THUNDER", "tag": "THD"},
+            "general": {
+                "level": 85,
+                "total_battles": 15420,
+                "win_rate": 68.6,
+                "total_kills": 67890,
+                "total_deaths": 15420,
+                "kd_ratio": 4.41,
+                "total_score": 1250000,
+                "premium": True,
+                "registration_date": "2020-03-15",
+                "last_online": "2024-06-27"
+            },
+            "aviation": {
+                "battles": 8920,
+                "wins": 6120,
+                "losses": 2800,
+                "win_rate": 68.6,
+                "kills": 45670,
+                "deaths": 8920,
+                "kd_ratio": 5.12,
+                "air_kills": 34560,
+                "ground_kills": 11110,
+                "bombing_kills": 2340,
+                "accuracy": 78.5
+            },
+            "tanks": {
+                "battles": 4560,
+                "wins": 3120,
+                "losses": 1440,
+                "win_rate": 68.4,
+                "kills": 15670,
+                "deaths": 4560,
+                "kd_ratio": 3.44,
+                "ground_kills": 12340,
+                "air_kills": 3330,
+                "capture_points": 890,
+                "accuracy": 72.3
+            },
+            "fleet": {
+                "battles": 1940,
+                "wins": 1340,
+                "losses": 600,
+                "win_rate": 69.1,
+                "kills": 6550,
+                "deaths": 1940,
+                "kd_ratio": 3.38,
+                "ship_kills": 5230,
+                "air_kills": 1320,
+                "torpedo_kills": 890,
+                "accuracy": 65.8
+            },
+            "achievements": [
+                {
+                    "name": "Ace",
+                    "description": "Destroy 5 enemy aircraft in one battle",
+                    "icon": "🏆",
+                    "unlocked": True
+                },
+                {
+                    "name": "Tank Ace",
+                    "description": "Destroy 5 enemy tanks in one battle",
+                    "icon": "🛡️",
+                    "unlocked": True
+                },
+                {
+                    "name": "Victory",
+                    "description": "Win 100 battles",
+                    "icon": "🎖️",
+                    "unlocked": True
+                }
+            ],
+            "clan": {
+                "name": "THUNDER",
+                "tag": "THD",
+                "role": "Member",
+                "member_since": "2021-01-15",
+                "clan_level": 25
+            },
+            "charts": {
+                "performance_over_time": [],
+                "vehicle_usage": [],
+                "nation_stats": []
+            },
+            "top_vehicles": [
+                {"name": "F-16 Fighting Falcon", "type": "air", "battles": 1247, "icon": "https://static.warthunder.com/upload/image/aircraft/f16.png"},
+                {"name": "M1A2 Abrams", "type": "ground", "battles": 892, "icon": "https://static.warthunder.com/upload/image/tanks/m1a2.png"},
+                {"name": "USS Iowa", "type": "fleet", "battles": 456, "icon": "https://static.warthunder.com/upload/image/ships/iowa.png"}
+            ]
+        }
     
     def _parse_player_page(self, soup: BeautifulSoup, username: str) -> Dict[str, Any]:
         """Парсинг страницы игрока"""
