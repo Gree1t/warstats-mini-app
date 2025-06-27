@@ -1,0 +1,593 @@
+@import url('https://fonts.googleapis.com/css2?family=Russo+One&display=swap');
+
+body {
+    background: #181c24 url('https://www.transparenttextures.com/patterns/hexellence.png');
+    color: #f3f3f3;
+    font-family: 'Montserrat', 'Roboto', Arial, sans-serif;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+.header {
+    background: linear-gradient(90deg, #ff3c00 0%, #ffb300 100%);
+    color: #fff;
+    font-size: 2.2rem;
+    font-weight: 900;
+    text-align: center;
+    padding: 32px 0 16px 0;
+    letter-spacing: 2px;
+    border-bottom: 4px solid #ff3c00;
+    box-shadow: 0 4px 24px #ff3c0030;
+    text-shadow: 0 2px 8px #000;
+}
+
+.container {
+    max-width: 540px;
+    margin: 32px auto;
+    background: rgba(24,28,36,0.98);
+    border-radius: 24px;
+    box-shadow: 0 8px 32px #000a, 0 1.5px 0 #ff3c00;
+    padding: 32px 24px 24px 24px;
+    border: 1.5px solid #ff3c00;
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    background: #232733;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px #0004;
+    margin-bottom: 24px;
+    padding: 8px 16px;
+}
+
+.search-bar input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 1.2rem;
+    padding: 12px 0;
+    outline: none;
+}
+
+.search-btn {
+    background: linear-gradient(90deg, #ff3c00 0%, #ffb300 100%);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    padding: 12px 24px;
+    margin-left: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 8px #ff3c0030;
+    transition: background 0.2s, box-shadow 0.2s;
+}
+.search-btn:hover {
+    background: linear-gradient(90deg, #ffb300 0%, #ff3c00 100%);
+    box-shadow: 0 4px 16px #ff3c0030;
+}
+
+.tabs {
+    display: flex;
+    gap: 12px;
+    margin: 24px 0 16px 0;
+    justify-content: center;
+}
+.tab-btn {
+    background: #232733;
+    color: #ffb300;
+    border: 2px solid #ff3c00;
+    border-radius: 10px 10px 0 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    padding: 10px 24px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    box-shadow: 0 2px 8px #0004;
+}
+.tab-btn.active, .tab-btn:hover {
+    background: linear-gradient(90deg, #ff3c00 0%, #ffb300 100%);
+    color: #fff;
+}
+
+.player-info {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+.avatar-placeholder {
+    width: 90px;
+    height: 90px;
+    background: linear-gradient(135deg, #ff3c00, #ffb300);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 2px 8px #000;
+    box-shadow: 0 4px 16px #ff3c0030;
+}
+.player-details h2 {
+    margin: 0 0 12px 0;
+    color: #ffb300;
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+}
+.player-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px;
+    background: rgba(40,44,50,0.95);
+    border-radius: 12px;
+    border: 1.5px solid #ffb300;
+    box-shadow: 0 2px 8px #ffb30030;
+}
+.stat-icon {
+    font-size: 28px;
+    margin-bottom: 6px;
+}
+.stat-label {
+    font-size: 13px;
+    color: #ffb300;
+    margin-bottom: 4px;
+}
+.stat-value {
+    font-size: 22px;
+    font-weight: bold;
+    color: #fff;
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(24,28,36,0.85);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: #ffb300;
+    font-weight: 900;
+    letter-spacing: 2px;
+    animation: fadeIn 0.3s;
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Адаптивность */
+@media (max-width: 600px) {
+    .container {
+        margin: 8px;
+        padding: 12px 4px;
+    }
+    .header {
+        font-size: 1.3rem;
+        padding: 12px 0 6px 0;
+    }
+    .player-info {
+        flex-direction: column;
+        gap: 12px;
+        text-align: center;
+    }
+    .player-stats-grid {
+        grid-template-columns: 1fr;
+    }
+    .tabs {
+        gap: 4px;
+    }
+    .tab-btn {
+        padding: 8px 10px;
+        font-size: 0.95rem;
+    }
+}
+
+.card {
+    background: #23272e;
+    border-radius: 14px;
+    box-shadow: 0 2px 12px #000a;
+    margin-bottom: 18px;
+    padding: 22px 18px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    font-size: 1.2rem;
+    border-left: 4px solid #ffb300;
+    position: relative;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+}
+.card .icon {
+    font-size: 2.1rem;
+    margin-right: 10px;
+}
+.card .value {
+    font-size: 2.1rem;
+    color: #ffb300;
+    font-weight: bold;
+}
+
+.flags {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+}
+.flag {
+    width: 32px;
+    height: 22px;
+    border-radius: 4px;
+    box-shadow: 0 1px 4px #0007;
+    border: 1.5px solid #444;
+    object-fit: cover;
+}
+
+.section-title {
+    font-size: 1.3rem;
+    color: #ffb300;
+    margin-bottom: 10px;
+    margin-top: 18px;
+    letter-spacing: 1px;
+}
+
+.achievements {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+.achievement {
+    background: #181c22;
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: #fff;
+    font-size: 1.1rem;
+    box-shadow: 0 1px 6px #0007;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    border-left: 3px solid #ffb300;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+    background: #23272e;
+}
+::-webkit-scrollbar-thumb {
+    background: #ff3c00;
+    border-radius: 8px;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    background: rgba(40,44,50,0.8);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #444;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    border-color: #ff3c00;
+    box-shadow: 0 4px 12px #ff3c0020;
+}
+
+.stat-card.large {
+    grid-column: span 2;
+}
+
+.stat-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.stat-title {
+    font-size: 14px;
+    color: #ccc;
+}
+
+/* Section Titles */
+.section-title {
+    font-size: 20px;
+    color: #ffb300;
+    margin: 24px 0 16px 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #ff3c00;
+}
+
+/* Vehicles List */
+.vehicles-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.vehicle-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: rgba(40,44,50,0.6);
+    border-radius: 12px;
+    border: 1px solid #444;
+    transition: all 0.3s ease;
+}
+
+.vehicle-item:hover {
+    border-color: #ff3c00;
+    transform: translateX(4px);
+}
+
+.vehicle-icon {
+    font-size: 32px;
+    flex-shrink: 0;
+}
+
+.vehicle-info {
+    flex: 1;
+}
+
+.vehicle-name {
+    font-size: 16px;
+    font-weight: bold;
+    color: #ffb300;
+    margin-bottom: 4px;
+}
+
+.vehicle-stats {
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+    color: #888;
+}
+
+/* Achievements Grid */
+.achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.achievement-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: rgba(40,44,50,0.6);
+    border-radius: 12px;
+    border: 1px solid #444;
+    transition: all 0.3s ease;
+}
+
+.achievement-card:hover {
+    border-color: #ffb300;
+    transform: translateY(-2px);
+}
+
+.achievement-icon {
+    font-size: 32px;
+    flex-shrink: 0;
+}
+
+.achievement-name {
+    font-size: 14px;
+    font-weight: bold;
+    color: #ffb300;
+    margin-bottom: 4px;
+}
+
+.achievement-description {
+    font-size: 12px;
+    color: #888;
+}
+
+/* Clan Card */
+.clan-card {
+    background: rgba(40,44,50,0.8);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #ff3c00;
+}
+
+.clan-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.clan-tag {
+    background: #ff3c00;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.clan-name {
+    font-size: 18px;
+    font-weight: bold;
+    color: #ffb300;
+}
+
+.clan-stats {
+    display: flex;
+    gap: 24px;
+}
+
+.clan-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #888;
+}
+
+.stat-value {
+    font-size: 16px;
+    font-weight: bold;
+    color: #ffb300;
+}
+
+/* Charts Container */
+.charts-container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.chart-card {
+    background: rgba(40,44,50,0.8);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #444;
+}
+
+.chart-card h3 {
+    margin: 0 0 16px 0;
+    color: #ffb300;
+    font-size: 16px;
+}
+
+.chart-card canvas {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    background: rgba(20,24,30,0.8);
+}
+
+/* Loading State */
+.loading {
+    position: relative;
+}
+
+.loading::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.loading::before {
+    content: 'Загрузка...';
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #ffb300;
+    font-size: 18px;
+    z-index: 1001;
+}
+
+/* Error Message */
+.error-message {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ff3c00;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    z-index: 1000;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+    to { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+
+/* No Data */
+.no-data {
+    text-align: center;
+    padding: 40px;
+    color: #888;
+    font-style: italic;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+    .container {
+        margin: 16px;
+        padding: 20px 16px;
+    }
+    
+    .header {
+        font-size: 1.8rem;
+        padding: 16px 0 8px 0;
+    }
+    
+    .player-info {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .player-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .stat-card.large {
+        grid-column: span 1;
+    }
+    
+    .tabs {
+        gap: 4px;
+    }
+    
+    .tab-btn {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+    
+    .achievements-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .clan-stats {
+        flex-direction: column;
+        gap: 12px;
+    }
+} 

@@ -1,0 +1,27 @@
+# Netlify configuration for War Thunder Stats Mini App
+# Updated: 2024-06-28 - Static site only
+
+[build]
+  publish = "."
+  command = ""
+  ignore = "*.py,requirements.txt,backend.py,mini_app_bot.py,config.py"
+
+# SPA redirects - all routes go to index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  force = true
+
+# Security headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+# Ignore Python files during build
+[build.environment]
+  NODE_VERSION = "18" 

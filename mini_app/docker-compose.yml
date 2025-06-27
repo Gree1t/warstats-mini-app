@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  wt-stats-mini-app:
+    image: nginx:alpine
+    container_name: wt-stats-mini-app
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./mini_app:/usr/share/nginx/html/mini_app
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+    restart: unless-stopped
+    environment:
+      - NGINX_HOST=your-domain.com
+      - NGINX_PORT=80
+    networks:
+      - wt-stats-network
+
+  # Redis для кэширования (опционально)
+  redis:
+    image: redis:alpine
+    container_name: wt-stats-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - wt-stats-network
+
+  # API сервер (опционально)
+  api-server:
+    build: ../  # Использует Dockerfile из корневой папки
+    container_name: wt-stats-api
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - wt-stats-network
+
+volumes:
+  redis_data:
+
+networks:
+  wt-stats-network:
+    driver: bridge 
