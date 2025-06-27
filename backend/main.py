@@ -11,6 +11,7 @@ import logging
 from datetime import datetime, timedelta
 import time
 from playwright.async_api import async_playwright
+import os
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -60,7 +61,11 @@ class WarThunderAPI:
             
             # Пытаемся получить реальные данные
             url = f"{self.base_urls[region]}?nick={username}"
-            html = await self._fetch_profile_playwright(url)
+            try:
+                html = await self._fetch_profile_playwright(url)
+            except Exception as e:
+                logger.warning(f"Playwright failed: {e}. Trying ScrapingAnt...")
+                html = await self._fetch_profile_scrapingant(url)
             soup = BeautifulSoup(html, 'html.parser')
             
             # Проверяем, существует ли игрок
@@ -120,6 +125,21 @@ class WarThunderAPI:
             html = await page.content()
             await browser.close()
             return html
+    
+    async def _fetch_profile_scrapingant(self, url: str) -> str:
+        api_key = os.getenv('SCRAPINGANT_API_KEY')
+        if not api_key:
+            raise Exception('SCRAPINGANT_API_KEY not set')
+        api_url = f"https://api.scrapingant.com/v2/general"
+        params = {
+            "url": url,
+            "x-api-key": api_key,
+            "browser": "true"
+        }
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(api_url, params=params, timeout=60)
+            resp.raise_for_status()
+            return resp.text
     
     def _get_demo_stats(self, username: str) -> Dict[str, Any]:
         """Возвращает демо-данные для игрока"""
