@@ -75,6 +75,7 @@ class WarThunderAPI:
             if not stats.get('general', {}).get('total_battles', 0):
                 logger.warning(f"No valid data found for player {username}, using demo data")
                 stats = self._get_demo_stats(username)
+                stats['__debug__'] = 'No valid data parsed from profile page'
             
             # Кэшируем результат
             cache[cache_key] = (stats, time.time())
@@ -84,7 +85,10 @@ class WarThunderAPI:
             
         except Exception as e:
             logger.error(f"Error fetching player data for {username}: {str(e)}")
+            import traceback
+            tb = traceback.format_exc()
             stats = self._get_demo_stats(username)
+            stats['__debug__'] = f'Exception: {str(e)}\nTraceback: {tb}'
             cache[cache_key] = (stats, time.time())
             return stats
     
