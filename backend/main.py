@@ -10,6 +10,7 @@ from typing import Optional, List, Dict, Any
 import logging
 from datetime import datetime, timedelta
 import time
+from playwright.async_api import async_playwright
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -55,14 +56,12 @@ class WarThunderAPI:
                 return cached_data
         
         try:
-            logger.info(f"Fetching stats for player: {username} in region: {region}")
+            logger.info(f"Fetching stats for player: {username} in region: {region} [Playwright]")
             
             # Пытаемся получить реальные данные
             url = f"{self.base_urls[region]}?nick={username}"
-            response = await self.session.get(url, timeout=30.0)
-            response.raise_for_status()
-            
-            soup = BeautifulSoup(response.text, 'html.parser')
+            html = await self._fetch_profile_playwright(url)
+            soup = BeautifulSoup(html, 'html.parser')
             
             # Проверяем, существует ли игрок
             error_div = soup.find('div', class_='error')
@@ -83,23 +82,21 @@ class WarThunderAPI:
             logger.info(f"Successfully fetched stats for player: {username}")
             return stats
             
-        except httpx.HTTPStatusError as e:
-            if e.response.status_code == 404:
-                raise HTTPException(status_code=404, detail="Player not found")
-            logger.error(f"HTTP error for {username}: {e}")
-            # Fallback to demo data
-            stats = self._get_demo_stats(username)
-            cache[cache_key] = (stats, time.time())
-            return stats
         except Exception as e:
             logger.error(f"Error fetching player data for {username}: {str(e)}")
-            logger.error(f"Error type: {type(e).__name__}")
-            import traceback
-            logger.error(f"Traceback: {traceback.format_exc()}")
-            # Fallback to demo data
             stats = self._get_demo_stats(username)
             cache[cache_key] = (stats, time.time())
             return stats
+    
+    async def _fetch_profile_playwright(self, url: str) -> str:
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=True)
+            page = await browser.new_page()
+            await page.goto(url, timeout=60000)
+            await page.wait_for_selector('body', timeout=15000)
+            html = await page.content()
+            await browser.close()
+            return html
     
     def _get_demo_stats(self, username: str) -> Dict[str, Any]:
         """Возвращает демо-данные для игрока"""
