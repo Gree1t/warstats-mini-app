@@ -1,0 +1,19 @@
+# War Thunder Statistics Telegram Bot Requirements
+
+# Telegram Bot API
+python-telegram-bot==20.7
+
+# HTTP Client
+httpx==0.25.2
+
+# Async support
+asyncio
+
+# Logging
+logging
+
+# Environment variables
+python-dotenv==1.0.0
+
+# Type hints
+typing-extensions==4.8.0 
