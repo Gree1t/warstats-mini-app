@@ -1,9 +1,15 @@
-# Netlify configuration for War Thunder Stats Mini App
-# Updated: 2024-06-28 - Static site only
+# Netlify configuration for GameStats Platform
+# Universal Gaming Statistics Platform
+# Updated: 2024-12-28
 
 [build]
   publish = "mini_app"
-  command = "echo 'GameStats Mini App - No build required'"
+  command = "echo 'GameStats Platform - Universal Gaming Statistics'"
+
+# Environment variables
+[build.environment]
+  NODE_VERSION = "18"
+  NPM_VERSION = "9"
 
 # SPA redirects - all routes go to index.html
 [[redirects]]
@@ -11,6 +17,12 @@
   to = "/index.html"
   status = 200
   force = true
+
+# API redirects (if needed)
+[[redirects]]
+  from = "/api/*"
+  to = "https://gamestats-api.onrender.com/:splat"
+  status = 200
 
 # Security headers
 [[headers]]
@@ -20,7 +32,61 @@
     X-XSS-Protection = "1; mode=block"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
+    Content-Security-Policy = "default-src 'self' https: data: 'unsafe-inline' 'unsafe-eval'; img-src 'self' data: https:; font-src 'self' https: data:;"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
 
-# Ignore Python files during build
-[build.environment]
-  NODE_VERSION = "18" 
+# Cache control for static assets
+[[headers]]
+  for = "*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "*.png"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "*.jpg"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "*.svg"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# HTML files - no cache
+[[headers]]
+  for = "*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Functions (if needed in future)
+[functions]
+  directory = "functions"
+  node_bundler = "esbuild"
+
+# Processing
+[build.processing]
+  skip_processing = false
+
+[build.processing.css]
+  bundle = true
+  minify = true
+
+[build.processing.js]
+  bundle = true
+  minify = true
+
+[build.processing.html]
+  pretty_urls = true
+
+[build.processing.images]
+  compress = true 
