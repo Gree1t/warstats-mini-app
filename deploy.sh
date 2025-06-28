@@ -1,86 +1,69 @@
 #!/bin/bash
 
-echo "🚀 Deploying GameStats Platform..."
+# War Thunder Statistics Backend - Render Deployment Script
+echo "🚀 Starting War Thunder Statistics Backend deployment..."
 
-# Проверяем наличие необходимых файлов
+# Check if we're in the right directory
 if [ ! -f "backend/main.py" ]; then
-    echo "❌ Error: backend/main.py not found"
+    echo "❌ Error: Please run this script from the project root directory"
     exit 1
 fi
 
-if [ ! -f "mini_app/index.html" ]; then
-    echo "❌ Error: mini_app/index.html not found"
-    exit 1
-fi
+# Set environment variables for production
+export ENVIRONMENT=production
+export PYTHON_VERSION=3.11.0
+export PORT=8000
 
-echo "✅ All required files found"
+# Install dependencies
+echo "📦 Installing dependencies..."
+cd backend
+pip install -r requirements.txt
 
-# Создаем .gitignore если его нет
-if [ ! -f ".gitignore" ]; then
-    echo "📝 Creating .gitignore..."
-    cat > .gitignore << EOF
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
+# Run health check
+echo "🏥 Running health check..."
+python -c "
+import asyncio
+import httpx
+import time
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
+async def health_check():
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get('http://localhost:8000/health', timeout=10)
+            if response.status_code == 200:
+                print('✅ Health check passed')
+                return True
+            else:
+                print(f'❌ Health check failed: {response.status_code}')
+                return False
+    except Exception as e:
+        print(f'❌ Health check error: {e}')
+        return False
 
-# OS
-.DS_Store
-Thumbs.db
+# Start server in background
+import subprocess
+import threading
+import time
 
-# Logs
-*.log
+def start_server():
+    subprocess.run(['uvicorn', 'main:app', '--host', '0.0.0.0', '--port', '8000'])
 
-# Chrome debug files
-debug_*.html
+server_thread = threading.Thread(target=start_server, daemon=True)
+server_thread.start()
 
-# Environment variables
-.env
-.env.local
+# Wait for server to start
+time.sleep(5)
 
-# Build artifacts
-dist/
-build/
-*.egg-info/
-EOF
-fi
+# Run health check
+result = asyncio.run(health_check())
+if result:
+    print('🎉 Deployment successful!')
+    print('📊 API Documentation: http://localhost:8000/docs')
+    print('🔍 Health Check: http://localhost:8000/health')
+    print('📈 Metrics: http://localhost:8000/metrics')
+else:
+    print('💥 Deployment failed!')
+    exit(1)
+"
 
-# Проверяем статус git
-if [ ! -d ".git" ]; then
-    echo "📦 Initializing git repository..."
-    git init
-    git add .
-    git commit -m "Initial GameStats platform commit"
-fi
-
-# Проверяем изменения
-if [ -n "$(git status --porcelain)" ]; then
-    echo "📝 Committing changes..."
-    git add .
-    git commit -m "Update GameStats platform - $(date)"
-fi
-
-echo "✅ Deployment preparation completed"
-echo ""
-echo "📋 Next steps:"
-echo "1. Push to GitHub: git push origin main"
-echo "2. Deploy backend to Render: https://render.com"
-echo "3. Deploy frontend to Netlify: https://netlify.com"
-echo ""
-echo "🔗 Backend API: https://gamestats-api.onrender.com"
-echo "🔗 Frontend App: https://gamestats-mini-app.netlify.app"
-echo ""
-echo "🎉 GameStats Platform is ready for deployment!" 
+echo "✅ Deployment script completed!" 

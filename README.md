@@ -67,6 +67,40 @@ GameStats Platform
    python -m http.server 3000
    ```
 
+## 🚀 Quick Deployment to Render
+
+### One-Click Deployment
+1. **Fork this repository** to your GitHub account
+2. **Sign up** at [render.com](https://render.com) (free)
+3. **Click "New +"** → **"Blueprint"**
+4. **Connect your GitHub** and select this repository
+5. **Click "Apply"** - Render will automatically:
+   - Create a Redis database for caching
+   - Deploy the FastAPI backend
+   - Configure all environment variables
+   - Set up health monitoring
+
+### Manual Deployment
+```bash
+# Clone and push to your repository
+git clone <your-repo-url>
+git add .
+git commit -m "Initial deployment"
+git push origin main
+
+# Render will auto-deploy on push
+```
+
+### Deployment Features
+- ✅ **Free Tier**: 750 hours/month
+- ✅ **Auto-deploy**: Updates on every git push
+- ✅ **Redis Cache**: Automatic database setup
+- ✅ **Health Monitoring**: Built-in health checks
+- ✅ **SSL/HTTPS**: Automatic certificates
+- ✅ **Custom Domains**: Available on paid plans
+
+📖 **Detailed deployment guide**: [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md)
+
 ## 📁 Project Structure
 
 ```
@@ -87,6 +121,7 @@ GameStats/
 ├── mini_app_bot.py         # Telegram bot
 ├── deploy.sh               # Deployment script
 ├── render.yaml             # Render deployment config
+├── .render-buildpacks      # Render buildpack config
 ├── netlify.toml            # Netlify configuration
 └── README.md               # This file
 ```

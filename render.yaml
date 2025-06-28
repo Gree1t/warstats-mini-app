@@ -1,13 +1,55 @@
+databases:
+  - name: warstats-redis
+    databaseName: warstats
+    user: warstats
+    plan: free
+
 services:
   - type: web
-    name: gamestats-api
+    name: warstats-backend
     env: python
     plan: free
-    buildCommand: pip install -r backend/requirements.txt
-    startCommand: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
+      - key: PORT
+        value: 8000
+      - key: ENVIRONMENT
+        value: production
+      - key: REDIS_URL
+        fromDatabase:
+          name: warstats-redis
+          property: connectionString
+      - key: WT_API_BASE_URL
+        value: https://warthunder.com/en/api
+      - key: STATSHARK_API_URL
+        value: https://api.statshark.net
+      - key: WT_LIVE_API_URL
+        value: https://warthunder.live/api
+      - key: CACHE_TTL
+        value: 21600
+      - key: LOG_LEVEL
+        value: INFO
+      - key: ENABLE_METRICS
+        value: true
+      - key: MAX_CONCURRENT_REQUESTS
+        value: 10
+      - key: REQUEST_TIMEOUT
+        value: 30
+      - key: CLOUDFLARE_BYPASS_ENABLED
+        value: true
+      - key: USER_AGENT_ROTATION
+        value: true
+      - key: RATE_LIMIT_REQUESTS
+        value: 100
+      - key: RATE_LIMIT_WINDOW
+        value: 3600
     healthCheckPath: /health
     autoDeploy: true
-    branch: main 
+    region: oregon
+    disk:
+      name: warstats-data
+      mountPath: /app/data
+      sizeGB: 1 
