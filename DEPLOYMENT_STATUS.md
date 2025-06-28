@@ -12,7 +12,7 @@ Your War Thunder Statistics project is now fully configured for Render deploymen
 - ✅ Environment variables configuration
 - ✅ Health check endpoint
 - ✅ Auto-deployment settings
-- ✅ Free tier optimization
+- ✅ Free tier optimization (no disk storage)
 
 ### 2. **.render-buildpacks** - Python Environment
 - ✅ Python buildpack configuration
@@ -50,6 +50,7 @@ Your War Thunder Statistics project is now fully configured for Render deploymen
 - **Redis Database**: Included in free tier
 - **Custom Domains**: Available on paid plans
 - **Auto-scaling**: Available on paid plans
+- **No disk storage**: Optimized for free tier limitations
 
 ## 🚀 Ready to Deploy
 

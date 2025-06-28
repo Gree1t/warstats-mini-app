@@ -164,9 +164,9 @@ curl https://your-service.onrender.com/docs
 - Rate limiting enabled
 
 ## 📞 Support
-- Render Documentation: [docs.render.com](https://docs.render.com)
-- Community Forum: [community.render.com](https://community.render.com)
-- Email Support: Available on paid plans
+- **Render Documentation**: [docs.render.com](https://docs.render.com)
+- **Community Forum**: [community.render.com](https://community.render.com)
+- **Email Support**: Available on paid plans
 
 ## 🎉 Success Indicators
 Your deployment is successful when:
